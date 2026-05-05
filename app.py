@@ -13,71 +13,54 @@ st.set_page_config(
 )
 
 # =============================================================================
-# EVENT DISPLAY CONFIG
-# Maps raw event key → (display label, group, sort key)
-# Groups/sort order: Course < Haies < Sauts < Lancers < Route < Combiné
+# EVENT SORT ORDER
+# Maps exact event name → integer sort key.
+# Events not listed fall back to 9999 (displayed last).
+# Groups: Course < Haies < Sauts < Lancers < Combiné < Autre
 # =============================================================================
 
-EVENT_CONFIG = {
-    # --- Course (flat, by distance) ---
-    "50":          ("50m",              "Course",   10),
-    "60":          ("60m",              "Course",   20),
-    "80":          ("80m",              "Course",   30),
-    "100":         ("100m",             "Course",   40),
-    "150":         ("150m",             "Course",   50),
-    "200":         ("200m",             "Course",   60),
-    "300":         ("300m",             "Course",   70),
-    "400":         ("400m",             "Course",   80),
-    "600":         ("600m",             "Course",   90),
-    "800":         ("800m",             "Course",  100),
-    "1000":        ("1000m",            "Course",  110),
-    "1500":        ("1500m",            "Course",  120),
-    "1609":        ("1 mile",           "Course",  130),
-    "2000":        ("2000m",            "Course",  140),
-    "3000":        ("3000m",            "Course",  150),
-    "5000":        ("5000m",            "Course",  160),
-    "10000":       ("10000m",           "Course",  170),
+EVENT_SORT = {
+    # --- Course ---
+    "50 m.": 10,  "60 m.": 20,  "80 m.": 30,  "100 m.": 40,  "150 m.": 50,
+    "200 m.": 60, "300 m.": 70, "400 m.": 80,  "500 m.": 90,  "600 m.": 100,
+    "800 m.": 110, "1000 m.": 120, "1500 m.": 130, "2000 m.": 140,
+    "3000 m.": 150, "5000 m.": 160, "10000 m.": 170,
+    "Mile": 180, "1/2 marathon": 190, "Marathon": 200, "100 km.": 210, "Heure": 220,
     # --- Haies ---
-    "50H":         ("50m haies",        "Haies",   210),
-    "60H":         ("60m haies",        "Haies",   220),
-    "80H":         ("80m haies",        "Haies",   230),
-    "100H":        ("100m haies",       "Haies",   240),
-    "110H":        ("110m haies",       "Haies",   250),
-    "300H":        ("300m haies",       "Haies",   260),
-    "400H":        ("400m haies",       "Haies",   270),
-    "1500SC":      ("1500m steeple",    "Haies",   280),
-    "2000SC":      ("2000m steeple",    "Haies",   290),
-    "3000SC":      ("3000m steeple",    "Haies",   300),
+    "50 m. haies": 310,
+    "50 m. haies (76.2)": 311,  "50 m. haies (84.0)": 312,
+    "50 m. haies (91.4)": 313,  "50 m. haies (99.1)": 314,  "50 m. haies (106.7)": 315,
+    "60 m. haies": 320,
+    "60 m. haies (76.2)": 321,  "60 m. haies (84.0)": 322,
+    "60 m. haies (91.4)": 323,  "60 m. haies (99.1)": 324,  "60 m. haies (106.7)": 325,
+    "80 m. haies (76.2)": 330,
+    "100 m. haies (76.2)": 340, "100 m. haies (84.0)": 341,
+    "110 m. haies (91.4)": 350, "110 m. haies (99.1)": 351, "110 m. haies (106.7)": 352,
+    "200 m. haies": 360, "300 m. haies": 370,
+    "400 m. haies (76.2)": 380, "400 m. haies (91.4)": 381,
+    "1500 m. steeple": 390, "2000 m. steeple": 391, "3000 m. steeple": 392,
     # --- Sauts ---
-    "long":        ("Longueur",         "Sauts",   410),
-    "triple":      ("Triple saut",      "Sauts",   420),
-    "high":        ("Hauteur",          "Sauts",   430),
-    "pole":        ("Perche",           "Sauts",   440),
+    "Longueur": 410, "Longueur (zone)": 411,
+    "Triple saut": 420, "Hauteur": 430, "Perche": 440,
     # --- Lancers ---
-    "shot":        ("Poids",            "Lancers", 510),
-    "javelin":     ("Javelot",          "Lancers", 520),
-    "disc":        ("Disque",           "Lancers", 530),
-    "hammer":      ("Marteau",          "Lancers", 540),
-    "weight":      ("Poids (salle)",    "Lancers", 550),
-    # --- Route ---
-    "5km":         ("5km route",        "Route",   610),
-    "10km":        ("10km route",       "Route",   620),
-    "15km":        ("15km route",       "Route",   630),
-    "half":        ("Semi-marathon",    "Route",   640),
-    "marathon":    ("Marathon",         "Route",   650),
+    "poids": 500,
+    "Poids (2.5 kg)": 501, "Poids (3 kg)": 502, "Poids (4 kg)": 503,
+    "Poids (5 kg)": 504,   "Poids (6 kg)": 505, "Poids (7.26 kg)": 506,
+    "Disque (0.75 kg)": 510, "Disque (1 kg)": 511, "Disque (1.5 kg)": 512,
+    "Disque (1.75 kg)": 513, "Disque (2 kg)": 514,
+    "Javelot (400 g)": 520, "Javelot (500 g)": 521, "Javelot (600 g)": 522,
+    "Javelot (700 g)": 523, "Javelot (800 g)": 524,
+    "Marteau (3 kg)": 530, "Marteau (4 kg)": 531, "Marteau (5 kg)": 532,
+    "Marteau (6 kg)": 533, "Marteau (7.26 kg)": 534,
+    "Balle (200 g)": 540,
     # --- Combiné ---
-    "pentathlon":  ("Pentathlon",       "Combiné", 710),
-    "heptathlon":  ("Heptathlon",       "Combiné", 720),
-    "decathlon":   ("Décathlon",        "Combiné", 730),
+    "Pentathlon": 610, "Hexathlon": 620, "Heptathlon femmes": 630, "Décathlon": 640,
+    # --- Autre ---
+    "UBS Kids Cup": 710, "Triathlon sprint (60-100-200 m.)": 720,
 }
 
-def event_label(event_name):
-    cfg = EVENT_CONFIG.get(str(event_name).strip())
-    return cfg[0] if cfg else str(event_name)
-
 def event_sort_key(event_name):
-    cfg = EVENT_CONFIG.get(str(event_name).strip())
-    return cfg[2] if cfg else 999
+    return EVENT_SORT.get(str(event_name).strip(), 9999)
 
 def sort_events(events):
     return sorted(events, key=event_sort_key)
@@ -218,14 +201,13 @@ if view == "Records":
     else:
         df["_sort"] = df["event"].apply(event_sort_key)
         df = df.sort_values("_sort")
-
-        df["Épreuve"] = df["event"].apply(event_label)
-        df["Année"]   = df["season"].apply(format_season)
-        df["Date"]    = df["date"].apply(format_date)
+        df["Année"] = df["season"].apply(format_season)
+        df["Date"]  = df["date"].apply(format_date)
 
         display = df[[
-            "Épreuve", "resultat", _ACOL_REC, "Année", "lieu"
+            "event", "resultat", _ACOL_REC, "Année", "lieu"
         ]].rename(columns={
+            "event":    "Épreuve",
             "resultat": "Performance",
             _ACOL_REC:  "Athlète",
             "lieu":     "Lieu",
@@ -251,11 +233,7 @@ elif view == "Top 10":
         st.info("Aucune épreuve disponible.")
         st.stop()
 
-    event_choice = st.selectbox(
-        "Épreuve",
-        options=events_available,
-        format_func=event_label,
-    )
+    event_choice = st.selectbox("Épreuve", options=events_available)
 
     # "TOUS" = no category filter (best 10 athletes across all categories)
     cats_in_data = [c for c in CAT_ORDER if c != "ALL" and c in master["club_cat"].unique()]
@@ -312,11 +290,7 @@ elif view == "Top 50":
         st.info("Aucune épreuve disponible.")
         st.stop()
 
-    event_choice = st.selectbox(
-        "Épreuve",
-        options=events_available,
-        format_func=event_label,
-    )
+    event_choice = st.selectbox("Épreuve", options=events_available)
 
     df = base[
         (base["event"] == event_choice) &

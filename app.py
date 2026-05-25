@@ -70,15 +70,6 @@ def sort_events(events):
 # =============================================================================
 
 @st.cache_data
-def load_records():
-    df = pd.read_excel("data/ls_master/ls_records_2025.xlsx")
-    df["indoor"] = df["indoor"].astype(bool)
-    df["season"] = pd.to_numeric(df["season"], errors="coerce")
-    df["yob"]    = pd.to_numeric(df["yob"],    errors="coerce")
-    df["mark"]   = pd.to_numeric(df["mark"],   errors="coerce")
-    return df
-
-@st.cache_data
 def load_master():
     df = pd.read_excel("data/ls_master/ls_master_2025.xlsx")
     df["indoor"] = df["indoor"].astype(bool)
@@ -87,12 +78,53 @@ def load_master():
     df["mark"]   = pd.to_numeric(df["mark"],   errors="coerce")
     return df
 
-records = load_records()
+@st.cache_data
+def compute_records(master_df):
+    """Derive club records from the master dataset.
+
+    For each (event, gender, indoor, club_cat) group the single best
+    performance is kept.  An extra synthetic 'ALL' category holds the
+    absolute club record (best across all age categories).
+    """
+    df = master_df[master_df["mark"].notna()].copy()
+    if df.empty:
+        return pd.DataFrame(columns=master_df.columns)
+
+    # Per-event sort direction (True = lower is better, e.g. times)
+    if "better_is_lower" in df.columns:
+        dir_map = df.groupby("event")["better_is_lower"].first().to_dict()
+    else:
+        dir_map = {}
+
+    def pick_best(group, event):
+        asc = bool(dir_map.get(event, True))
+        idx = group["mark"].idxmin() if asc else group["mark"].idxmax()
+        return group.loc[idx]
+
+    # Best per event + gender + indoor + club_cat
+    per_cat = [
+        pick_best(grp, event)
+        for (event, _gender, _indoor, _club_cat), grp
+        in df.groupby(["event", "gender", "indoor", "club_cat"])
+    ]
+
+    # ALL = absolute club record regardless of age category
+    all_rows = []
+    for (event, _gender, _indoor), grp in df.groupby(["event", "gender", "indoor"]):
+        row = pick_best(grp, event).copy()
+        row["club_cat"] = "ALL"
+        all_rows.append(row)
+
+    return pd.concat(
+        [pd.DataFrame(per_cat), pd.DataFrame(all_rows)],
+        ignore_index=True,
+    )
+
 master  = load_master()
+records = compute_records(master)
 
 # Fallback: use "athlete" if "athlete_display" column is absent
-_ACOL     = "athlete_display" if "athlete_display" in master.columns  else "athlete"
-_ACOL_REC = "athlete_display" if "athlete_display" in records.columns else "athlete"
+_ACOL = "athlete_display" if "athlete_display" in master.columns else "athlete"
 
 # =============================================================================
 # LABELS
@@ -205,11 +237,11 @@ if view == "Records":
         df["Date"]  = df["date"].apply(format_date)
 
         display = df[[
-            "event", "resultat", _ACOL_REC, "Année", "lieu"
+            "event", "resultat", _ACOL, "Année", "lieu"
         ]].rename(columns={
             "event":    "Épreuve",
             "resultat": "Performance",
-            _ACOL_REC:  "Athlète",
+            _ACOL:  "Athlète",
             "lieu":     "Lieu",
         }).reset_index(drop=True)
 
